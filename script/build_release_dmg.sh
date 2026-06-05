@@ -93,6 +93,8 @@ RELEASE_TITLE="${RELEASE_TITLE:-$APP_NAME DMG release $TAG}"
 NOTES_PATH="$WORK_DIR/release-notes.md"
 NOTARY_LOG="$WORK_DIR/notary-log.json"
 SUBMISSION_ID_PATH="$WORK_DIR/notary-submission-id.txt"
+APP_NOTARY_LOG="$WORK_DIR/app-notary-log.json"
+APP_SUBMISSION_ID_PATH="$WORK_DIR/app-notary-submission-id.txt"
 DOWNLOAD_BASE_URL="https://github.com/$RELEASE_REPO/releases/download/$TAG"
 
 require_command() {
@@ -195,6 +197,24 @@ notarize_dmg() {
   xcrun stapler validate "$DMG_PATH"
 }
 
+notarize_app() {
+  local submit_output submission_id
+
+  submit_output="$(
+    xcrun notarytool submit "$SIGNED_APP" \
+      --keychain-profile "$NOTARY_PROFILE" \
+      --wait \
+      --output-format json
+  )"
+  printf '%s\n' "$submit_output" > "$APP_NOTARY_LOG"
+
+  submission_id="$(printf '%s\n' "$submit_output" | python3 -c 'import json,sys; print(json.load(sys.stdin)["id"])')"
+  printf '%s\n' "$submission_id" > "$APP_SUBMISSION_ID_PATH"
+
+  xcrun stapler staple "$SIGNED_APP"
+  xcrun stapler validate "$SIGNED_APP"
+}
+
 write_checksum() {
   local hash
   hash="$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')"
@@ -220,8 +240,8 @@ verify_mounted_app() {
   fi
 
   verify_app_bundle "$mounted_app"
-  spctl -a -vv "$mounted_app"
-  spctl -a -vv -t open "$DMG_PATH"
+  syspolicy_check distribution "$mounted_app"
+  syspolicy_check distribution "$DMG_PATH"
   cleanup_mount "$mount_path"
   trap - EXIT
 }
@@ -275,6 +295,7 @@ if [[ ! -d "$ARCHIVED_APP" ]]; then
 fi
 
 sign_app
+notarize_app
 create_dmg
 notarize_dmg
 write_checksum
@@ -290,4 +311,5 @@ echo "  App version: $APP_VERSION"
 echo "  Build number: $BUILD_NUMBER"
 echo "  DMG: $DMG_PATH"
 echo "  Checksum: $CHECKSUM_PATH"
+echo "  App notary submission id: $(cat "$APP_SUBMISSION_ID_PATH")"
 echo "  Notary submission id: $(cat "$SUBMISSION_ID_PATH")"
