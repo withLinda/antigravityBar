@@ -8,6 +8,21 @@ Instead of opening Terminal, checking accounts one by one, and trying to remembe
 
 ![AntigravityBar menu screenshot](docs/images/antigravitybar-menu.png)
 
+## Install With DMG
+
+Download the latest notarized DMG from GitHub Releases:
+
+- [AntigravityBar-v2026.06.06.1.dmg](https://github.com/withLinda/antigravityBar/releases/download/v2026.06.06.1/AntigravityBar-v2026.06.06.1.dmg)
+- [AntigravityBar-v2026.06.06.1.dmg.sha256](https://github.com/withLinda/antigravityBar/releases/download/v2026.06.06.1/AntigravityBar-v2026.06.06.1.dmg.sha256)
+
+Install steps:
+
+1. Install the `antigravity-usage` CLI first.
+2. Open the DMG file.
+3. Drag `AntigravityBar.app` into `Applications`.
+4. Open AntigravityBar from `Applications`.
+5. Log in to your first Google account when the app asks.
+
 ## Why It Is Useful
 
 - See quota faster without repeating CLI commands
