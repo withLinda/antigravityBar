@@ -21,7 +21,7 @@ Install steps:
    Supported examples:
    - Homebrew Node
    - official Node.js installer
-2. Install the `antigravity-usage` CLI.
+2. Install the [`antigravity-usage` CLI](https://github.com/skainguyen1412/antigravity-usage).
 3. Open the DMG file.
 4. Drag `AntigravityBar.app` into `Applications`.
 5. Open AntigravityBar from `Applications`.
@@ -32,7 +32,7 @@ Important:
 - AntigravityBar is a GUI app, so it does not automatically inherit your shell startup environment.
 - Shell-only Node managers such as `nvm`, `fnm`, and `asdf` may work in Terminal but may not be visible to AntigravityBar.
 
-Install the CLI:
+Install the CLI from the upstream project:
 
 ```bash
 npm install -g antigravity-usage
@@ -93,7 +93,7 @@ For Gemini 3.1 Pro, the app combines matching Gemini quota entries and shows the
 - Xcode
 - XcodeGen
 - Node.js
-- `antigravity-usage` installed
+- [`antigravity-usage`](https://github.com/skainguyen1412/antigravity-usage) installed
 
 Install the CLI:
 
