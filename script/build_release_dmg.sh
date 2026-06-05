@@ -84,6 +84,7 @@ ARCHIVED_APP="$ARCHIVE_PATH/Products/Applications/$APP_NAME.app"
 DIST_DIR="$ROOT_DIR/dist"
 WORK_DIR="$ROOT_DIR/build/release-dmg-$TAG"
 SIGNED_APP="$WORK_DIR/$APP_NAME.app"
+SIGNED_APP_ZIP="$WORK_DIR/$APP_NAME-$TAG.zip"
 STAGING_DIR="$WORK_DIR/staging"
 DMG_NAME="$APP_NAME-$TAG.dmg"
 DMG_PATH="$DIST_DIR/$DMG_NAME"
@@ -200,8 +201,11 @@ notarize_dmg() {
 notarize_app() {
   local submit_output submission_id
 
+  rm -f "$SIGNED_APP_ZIP"
+  /usr/bin/ditto -c -k --keepParent "$SIGNED_APP" "$SIGNED_APP_ZIP"
+
   submit_output="$(
-    xcrun notarytool submit "$SIGNED_APP" \
+    xcrun notarytool submit "$SIGNED_APP_ZIP" \
       --keychain-profile "$NOTARY_PROFILE" \
       --wait \
       --output-format json
