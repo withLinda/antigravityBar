@@ -117,7 +117,6 @@ verify_notary_profile() {
 verify_app_bundle() {
   local app_path="$1"
   codesign --verify --deep --strict --verbose=2 "$app_path"
-  spctl -a -vv "$app_path"
 }
 
 cleanup_mount() {
@@ -221,6 +220,7 @@ verify_mounted_app() {
   fi
 
   verify_app_bundle "$mounted_app"
+  spctl -a -vv "$mounted_app"
   spctl -a -vv -t open "$DMG_PATH"
   cleanup_mount "$mount_path"
   trap - EXIT
