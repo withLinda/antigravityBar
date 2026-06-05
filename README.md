@@ -12,16 +12,31 @@ Instead of opening Terminal, checking accounts one by one, and trying to remembe
 
 Download the latest notarized DMG from GitHub Releases:
 
-- [AntigravityBar-v2026.06.06.1.dmg](https://github.com/withLinda/antigravityBar/releases/download/v2026.06.06.1/AntigravityBar-v2026.06.06.1.dmg)
-- [AntigravityBar-v2026.06.06.1.dmg.sha256](https://github.com/withLinda/antigravityBar/releases/download/v2026.06.06.1/AntigravityBar-v2026.06.06.1.dmg.sha256)
+- [AntigravityBar-v2026.06.06.2.dmg](https://github.com/withLinda/antigravityBar/releases/download/v2026.06.06.2/AntigravityBar-v2026.06.06.2.dmg)
+- [AntigravityBar-v2026.06.06.2.dmg.sha256](https://github.com/withLinda/antigravityBar/releases/download/v2026.06.06.2/AntigravityBar-v2026.06.06.2.dmg.sha256)
 
 Install steps:
 
-1. Install the `antigravity-usage` CLI first.
-2. Open the DMG file.
-3. Drag `AntigravityBar.app` into `Applications`.
-4. Open AntigravityBar from `Applications`.
-5. Log in to your first Google account when the app asks.
+1. Install Node.js in a system-visible location.
+   Supported examples:
+   - Homebrew Node
+   - official Node.js installer
+2. Install the `antigravity-usage` CLI.
+3. Open the DMG file.
+4. Drag `AntigravityBar.app` into `Applications`.
+5. Open AntigravityBar from `Applications`.
+6. Log in to your first Google account when the app asks.
+
+Important:
+
+- AntigravityBar is a GUI app, so it does not automatically inherit your shell startup environment.
+- Shell-only Node managers such as `nvm`, `fnm`, and `asdf` may work in Terminal but may not be visible to AntigravityBar.
+
+Install the CLI:
+
+```bash
+npm install -g antigravity-usage
+```
 
 ## Why It Is Useful
 
@@ -54,14 +69,15 @@ For Gemini 3.1 Pro, the app combines matching Gemini quota entries and shows the
 
 ## How To Use
 
-1. Install the `antigravity-usage` CLI.
-2. Log in to your first Google account with the CLI.
-3. Open AntigravityBar.
-4. Click `Add Account` if you want to add more Google accounts.
-5. Look at the menu bar percentage to spot your lowest remaining quota fast.
-6. Open the menu to view each account.
-7. Expand an account card to see model percentages and reset times.
-8. Click `Refresh` when you want to force a new check.
+1. Install Node.js in a system-visible location.
+2. Install the `antigravity-usage` CLI.
+3. Log in to your first Google account with the CLI.
+4. Open AntigravityBar.
+5. Click `Add Account` if you want to add more Google accounts.
+6. Look at the menu bar percentage to spot your lowest remaining quota fast.
+7. Open the menu to view each account.
+8. Expand an account card to see model percentages and reset times.
+9. Click `Refresh` when you want to force a new check.
 
 ## What To Expect
 
@@ -76,6 +92,7 @@ For Gemini 3.1 Pro, the app combines matching Gemini quota entries and shows the
 - macOS 14 or newer
 - Xcode
 - XcodeGen
+- Node.js
 - `antigravity-usage` installed
 
 Install the CLI:

@@ -6,7 +6,11 @@ final class AntigravityUsageStoreTests: XCTestCase {
     func testAddAccountRunsAddCommandThenRefreshesAccounts() async throws {
         let recorder = StoreCommandRecorder()
         let client = AntigravityUsageCLIClient(
-            executableSearchPaths: ["/usr/bin/true"],
+            resolver: AntigravityCLIResolution(
+                executableSearchPaths: ["/usr/bin/true"],
+                fileExists: { path in path == "/usr/bin/true" },
+                readFirstLine: { _ in "#!/bin/bash" }
+            ),
             runner: { arguments, executablePath in
                 await recorder.record(arguments: arguments, executablePath: executablePath)
 
@@ -53,7 +57,11 @@ final class AntigravityUsageStoreTests: XCTestCase {
         let gate = AsyncGate()
         let refreshArguments = AntigravityUsageCLIClient.allAccountsArguments(forceRefresh: true)
         let client = AntigravityUsageCLIClient(
-            executableSearchPaths: ["/usr/bin/true"],
+            resolver: AntigravityCLIResolution(
+                executableSearchPaths: ["/usr/bin/true"],
+                fileExists: { path in path == "/usr/bin/true" },
+                readFirstLine: { _ in "#!/bin/bash" }
+            ),
             runner: { arguments, executablePath in
                 await recorder.record(arguments: arguments, executablePath: executablePath)
 
@@ -93,7 +101,11 @@ final class AntigravityUsageStoreTests: XCTestCase {
         let recorder = StoreCommandRecorder()
         let refreshArguments = AntigravityUsageCLIClient.allAccountsArguments(forceRefresh: true)
         let client = AntigravityUsageCLIClient(
-            executableSearchPaths: ["/usr/bin/true"],
+            resolver: AntigravityCLIResolution(
+                executableSearchPaths: ["/usr/bin/true"],
+                fileExists: { path in path == "/usr/bin/true" },
+                readFirstLine: { _ in "#!/bin/bash" }
+            ),
             runner: { arguments, executablePath in
                 await recorder.record(arguments: arguments, executablePath: executablePath)
 
@@ -121,6 +133,27 @@ final class AntigravityUsageStoreTests: XCTestCase {
             ["accounts", "remove", "--force", "person@example.com"],
             refreshArguments
         ])
+    }
+
+    func testRefreshShowsFriendlyNodeSetupError() async throws {
+        let resolver = AntigravityCLIResolution(
+            executableSearchPaths: ["/mock/antigravity-usage"],
+            nodeSearchPaths: ["/usr/local/bin/node"],
+            fileExists: { path in path == "/mock/antigravity-usage" },
+            readFirstLine: { _ in "#!/usr/bin/env node" }
+        )
+        let store = AntigravityUsageStore(
+            client: AntigravityUsageCLIClient(resolver: resolver)
+        )
+
+        store.refresh(force: true)
+
+        try await waitUntil {
+            if case .failed(let message) = store.loadState {
+                return message.contains("system-visible Node.js install")
+            }
+            return false
+        }
     }
 
     private func waitUntil(

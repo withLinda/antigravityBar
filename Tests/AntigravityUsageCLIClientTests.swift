@@ -45,6 +45,49 @@ final class AntigravityUsageCLIClientTests: XCTestCase {
         XCTAssertEqual(arguments, ["quota", "--all", "--json", "--all-models", "--refresh"])
     }
 
+    func testFetchAllAccountsRunsResolvedNodeLaunchPlan() async throws {
+        let recorder = CommandRecorder()
+        let resolver = AntigravityCLIResolution(
+            executableSearchPaths: ["/mock/antigravity-usage"],
+            nodeSearchPaths: ["/usr/local/bin/node"],
+            fileExists: { _ in true },
+            readFirstLine: { _ in "#!/usr/bin/env node" }
+        )
+        let client = AntigravityUsageCLIClient(
+            resolver: resolver,
+            runner: { arguments, executablePath in
+                await recorder.record(arguments: arguments, executablePath: executablePath)
+                return "[]"
+            }
+        )
+
+        _ = try await client.fetchAllAccounts(forceRefresh: false)
+
+        let command = await recorder.command
+        XCTAssertEqual(command?.executablePath, "/usr/local/bin/node")
+        XCTAssertEqual(command?.arguments, ["/mock/antigravity-usage", "quota", "--all", "--json", "--all-models"])
+    }
+
+    func testMapsMissingNodeRuntimeToFriendlyError() async {
+        let resolver = AntigravityCLIResolution(
+            executableSearchPaths: ["/mock/antigravity-usage"],
+            nodeSearchPaths: ["/usr/local/bin/node"],
+            fileExists: { path in path == "/mock/antigravity-usage" },
+            readFirstLine: { _ in "#!/usr/bin/env node" }
+        )
+        let client = AntigravityUsageCLIClient(resolver: resolver)
+
+        do {
+            _ = try await client.fetchAllAccounts(forceRefresh: true)
+            XCTFail("Expected an error")
+        } catch {
+            XCTAssertEqual(
+                error.localizedDescription,
+                "AntigravityBar found antigravity-usage, but it could not find a system-visible Node.js install. Shell-only installs like nvm, fnm, or asdf may work in Terminal but not in this app."
+            )
+        }
+    }
+
     func testBuildsAddAccountArguments() {
         let arguments = AntigravityUsageCLIClient.addAccountArguments
 
@@ -60,7 +103,11 @@ final class AntigravityUsageCLIClientTests: XCTestCase {
     func testAddAccountRunsAccountsAddCommand() async throws {
         let recorder = CommandRecorder()
         let client = AntigravityUsageCLIClient(
-            executableSearchPaths: ["/usr/bin/true"],
+            resolver: AntigravityCLIResolution(
+                executableSearchPaths: ["/usr/bin/true"],
+                fileExists: { path in path == "/usr/bin/true" },
+                readFirstLine: { _ in "#!/bin/bash" }
+            ),
             runner: { arguments, executablePath in
                 await recorder.record(arguments: arguments, executablePath: executablePath)
                 return "Account added successfully"
@@ -77,7 +124,11 @@ final class AntigravityUsageCLIClientTests: XCTestCase {
     func testRemoveAccountRunsAccountsRemoveCommand() async throws {
         let recorder = CommandRecorder()
         let client = AntigravityUsageCLIClient(
-            executableSearchPaths: ["/usr/bin/true"],
+            resolver: AntigravityCLIResolution(
+                executableSearchPaths: ["/usr/bin/true"],
+                fileExists: { path in path == "/usr/bin/true" },
+                readFirstLine: { _ in "#!/bin/bash" }
+            ),
             runner: { arguments, executablePath in
                 await recorder.record(arguments: arguments, executablePath: executablePath)
                 return "Account removed successfully"

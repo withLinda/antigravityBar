@@ -107,14 +107,31 @@ private struct StatusPill: View {
 private struct StatusBanner: View {
     let message: String
 
+    private var footnote: String? {
+        guard message.contains("system-visible Node.js install") else {
+            return nil
+        }
+
+        return "Install Node.js in a system-visible location, then open AntigravityBar again."
+    }
+
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(AntigravityTheme.Palette.yellow)
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(AntigravityTheme.primaryText)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundStyle(AntigravityTheme.Palette.yellow)
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(AntigravityTheme.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let footnote {
+                Text(footnote)
+                    .font(.caption2)
+                    .foregroundStyle(AntigravityTheme.mutedText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(12)
         .background(AntigravityTheme.Palette.yellow.opacity(0.12), in: .rect(cornerRadius: 12))

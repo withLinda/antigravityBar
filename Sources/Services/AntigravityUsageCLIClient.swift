@@ -3,6 +3,7 @@ import Foundation
 struct AntigravityUsageCLIClient: Sendable {
     enum ClientError: LocalizedError, Equatable {
         case executableNotFound
+        case nodeRuntimeNotFound
         case jsonNotFound
         case commandFailed(String)
 
@@ -10,6 +11,8 @@ struct AntigravityUsageCLIClient: Sendable {
             switch self {
             case .executableNotFound:
                 return "antigravity-usage CLI was not found."
+            case .nodeRuntimeNotFound:
+                return "AntigravityBar found antigravity-usage, but it could not find a system-visible Node.js install. Shell-only installs like nvm, fnm, or asdf may work in Terminal but not in this app."
             case .jsonNotFound:
                 return "The CLI did not return JSON."
             case .commandFailed(let message):
@@ -18,31 +21,28 @@ struct AntigravityUsageCLIClient: Sendable {
         }
     }
 
-    let executableSearchPaths: [String]
+    let resolver: AntigravityCLIResolution
     let runner: @Sendable ([String], String) async throws -> String
 
     init(
-        executableSearchPaths: [String] = Self.defaultExecutableSearchPaths,
+        resolver: AntigravityCLIResolution = AntigravityCLIResolution(),
         runner: @escaping @Sendable ([String], String) async throws -> String = Self.runProcess(arguments:executablePath:)
     ) {
-        self.executableSearchPaths = executableSearchPaths
+        self.resolver = resolver
         self.runner = runner
     }
 
     func fetchAllAccounts(forceRefresh: Bool = true) async throws -> [AllAccountsQuotaResult] {
-        let executablePath = try executablePath()
-        let output = try await runner(Self.allAccountsArguments(forceRefresh: forceRefresh), executablePath)
+        let output = try await output(for: Self.allAccountsArguments(forceRefresh: forceRefresh))
         return try Self.decodeAccounts(from: output)
     }
 
     func addAccount() async throws {
-        let executablePath = try executablePath()
-        _ = try await runner(Self.addAccountArguments, executablePath)
+        _ = try await output(for: Self.addAccountArguments)
     }
 
     func removeAccount(email: String) async throws {
-        let executablePath = try executablePath()
-        _ = try await runner(Self.removeAccountArguments(email: email), executablePath)
+        _ = try await output(for: Self.removeAccountArguments(email: email))
     }
 
     static func allAccountsArguments(forceRefresh: Bool) -> [String] {
@@ -69,17 +69,18 @@ struct AntigravityUsageCLIClient: Sendable {
         return try JSONDecoder().decode([AllAccountsQuotaResult].self, from: data)
     }
 
-    private static let defaultExecutableSearchPaths = [
-        "/opt/homebrew/bin/antigravity-usage",
-        "/usr/local/bin/antigravity-usage",
-        "/usr/bin/antigravity-usage"
-    ]
-
-    private func executablePath() throws -> String {
-        guard let executablePath = executableSearchPaths.first(where: { FileManager.default.isExecutableFile(atPath: $0) }) else {
-            throw ClientError.executableNotFound
+    private func output(for arguments: [String]) async throws -> String {
+        do {
+            let plan = try resolver.makeLaunchPlan(arguments: arguments)
+            return try await runner(plan.arguments, plan.executablePath)
+        } catch let error as AntigravityCLIResolution.ResolutionError {
+            switch error {
+            case .cliNotFound:
+                throw ClientError.executableNotFound
+            case .nodeRuntimeNotFound:
+                throw ClientError.nodeRuntimeNotFound
+            }
         }
-        return executablePath
     }
 
     private static func runProcess(arguments: [String], executablePath: String) async throws -> String {
